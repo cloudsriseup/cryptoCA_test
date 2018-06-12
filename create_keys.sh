@@ -21,8 +21,8 @@ wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/openssl
 wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/openssl.ecc.cnf -O openssl.ecc.cnf
 
 #sign root ca certs
-openssl req -config openssl.rsa.cnf -key private/ca.rsa.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.rsa.cert.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com"
-openssl req -config openssl.ecc.cnf -key private/ca.ecc.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.ecc.cert.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com" 
+openssl req -config openssl.rsa.cnf -key private/ca.rsa.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.rsa.cert.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=CA/L=CM/O=log/CN=blackhole.rh.com"
+openssl req -config openssl.ecc.cnf -key private/ca.ecc.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.ecc.cert.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=CA/L=CM/O=log/CN=blackhole.rh.com" 
 
 
 ## intermediate ca
@@ -43,8 +43,8 @@ wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/i_opens
 wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/i_openssl.ecc.cnf -O intermediate/openssl.ecc.cnf
 
 #sign intermediate ca certs
-openssl req -config intermediate/openssl.rsa.cnf -new -sha256 -key intermediate/private/intermediate.rsa.key.pem -out intermediate/csr/intermediate.rsa.csr.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com" 
-openssl req -config intermediate/openssl.ecc.cnf -new -sha256 -key intermediate/private/intermediate.ecc.key.pem -out intermediate/csr/intermediate.ecc.csr.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com" 
+openssl req -config intermediate/openssl.rsa.cnf -new -sha256 -key intermediate/private/intermediate.rsa.key.pem -out intermediate/csr/intermediate.rsa.csr.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=CA/L=CM/O=log/CN=blackhole.rh.com" 
+openssl req -config intermediate/openssl.ecc.cnf -new -sha256 -key intermediate/private/intermediate.ecc.key.pem -out intermediate/csr/intermediate.ecc.csr.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=CA/L=CM/O=log/CN=blackhole.rh.com" 
 
 openssl ca -config openssl.rsa.cnf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in intermediate/csr/intermediate.rsa.csr.pem -out intermediate/certs/intermediate.rsa.cert.pem -passin file:<(echo -n "$PASS") -batch
 openssl ca -config openssl.ecc.cnf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in intermediate/csr/intermediate.ecc.csr.pem -out intermediate/certs/intermediate.ecc.cert.pem -passin file:<(echo -n "$PASS") -batch
@@ -54,12 +54,12 @@ openssl ca -config openssl.ecc.cnf -extensions v3_intermediate_ca -days 3650 -no
 
 # create server key
 cd /tmp/test/ca/intermediate/
-openssl genrsa -out private/$HOSTNAME.rsa.key.pem 2048
-openssl ecparam -name $CURVE -genkey -out private/$HOSTNAME.ecc.key.pem 
+openssl genrsa -out private/blackhole.rh.com.rsa.key.pem 2048
+openssl ecparam -name $CURVE -genkey -out private/blackhole.rh.com.ecc.key.pem 
 
 #create csr
-openssl req -config openssl.rsa.cnf -key private/$HOSTNAME.rsa.key.pem -new -sha256 -out csr/$HOSTNAME.rsa.csr.pem -subj "/CN=blackhole.rh.com" 
-openssl req -config openssl.ecc.cnf -key private/$HOSTNAME.ecc.key.pem -new -sha256 -out csr/$HOSTNAME.ecc.csr.pem -subj "/CN=blackhole.rh.com"
+openssl req -config openssl.rsa.cnf -key private/$HOSTNAME.rsa.key.pem -new -sha256 -out csr/$HOSTNAME.rsa.csr.pem -subj "/C=US/ST=CA/L=CM/O=log/CN=blackhole.rh.com" 
+openssl req -config openssl.ecc.cnf -key private/$HOSTNAME.ecc.key.pem -new -sha256 -out csr/$HOSTNAME.ecc.csr.pem -subj "/C=US/ST=CA/L=CM/O=log/CN=blackhole.rh.com"
 
 #sign csr
 openssl ca -config openssl.rsa.cnf -extensions server_cert -batch -days 375 -notext -md sha256 -in csr/$HOSTNAME.rsa.csr.pem -out certs/$HOSTNAME.rsa.cert.pem -passin file:<(echo -n "$PASS") -batch
