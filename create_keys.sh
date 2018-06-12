@@ -2,6 +2,9 @@
 
 CURVE=prime256v1
 PASS=test
+HOSTNAME=blackhole.rh.com
+RSAPORT=50044
+ECCPORT=50045
 
 ## root ca
 mkdir -p /tmp/test/ca/{certs,crl,newcerts,private}
@@ -18,8 +21,8 @@ wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/openssl
 wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/openssl.ecc.cnf -O openssl.ecc.cnf
 
 #sign root ca certs
-openssl req -config openssl.rsa.cnf -key private/ca.rsa.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.rsa.cert.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=test/L=test/O=test/CN=root ca rsa"
-openssl req -config openssl.ecc.cnf -key private/ca.ecc.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.ecc.cert.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=test/L=test/O=test/CN=root ca ecc"
+openssl req -config openssl.rsa.cnf -key private/ca.rsa.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.rsa.cert.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com"
+openssl req -config openssl.ecc.cnf -key private/ca.ecc.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.ecc.cert.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com" 
 
 
 ## intermediate ca
@@ -40,8 +43,8 @@ wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/i_opens
 wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/i_openssl.ecc.cnf -O intermediate/openssl.ecc.cnf
 
 #sign intermediate ca certs
-openssl req -config intermediate/openssl.rsa.cnf -new -sha256 -key intermediate/private/intermediate.rsa.key.pem -out intermediate/csr/intermediate.rsa.csr.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=test/L=test/O=test/CN=intermediate ca rsa"
-openssl req -config intermediate/openssl.ecc.cnf -new -sha256 -key intermediate/private/intermediate.ecc.key.pem -out intermediate/csr/intermediate.ecc.csr.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=test/L=test/O=test/CN=intermediate ca ecc"
+openssl req -config intermediate/openssl.rsa.cnf -new -sha256 -key intermediate/private/intermediate.rsa.key.pem -out intermediate/csr/intermediate.rsa.csr.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com" 
+openssl req -config intermediate/openssl.ecc.cnf -new -sha256 -key intermediate/private/intermediate.ecc.key.pem -out intermediate/csr/intermediate.ecc.csr.pem -passin file:<(echo -n "$PASS") -subj "/CN=blackhole.rh.com" 
 
 openssl ca -config openssl.rsa.cnf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in intermediate/csr/intermediate.rsa.csr.pem -out intermediate/certs/intermediate.rsa.cert.pem -passin file:<(echo -n "$PASS") -batch
 openssl ca -config openssl.ecc.cnf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in intermediate/csr/intermediate.ecc.csr.pem -out intermediate/certs/intermediate.ecc.cert.pem -passin file:<(echo -n "$PASS") -batch
@@ -51,16 +54,16 @@ openssl ca -config openssl.ecc.cnf -extensions v3_intermediate_ca -days 3650 -no
 
 # create server key
 cd /tmp/test/ca/intermediate/
-openssl genrsa -out private/localhost.rsa.key.pem 2048
-openssl ecparam -name $CURVE -genkey -out private/localhost.ecc.key.pem 
+openssl genrsa -out private/$HOSTNAME.rsa.key.pem 2048
+openssl ecparam -name $CURVE -genkey -out private/$HOSTNAME.ecc.key.pem 
 
 #create csr
-openssl req -config openssl.rsa.cnf -key private/localhost.rsa.key.pem -new -sha256 -out csr/localhost.rsa.csr.pem -subj "/C=US/ST=test/L=test/O=test/CN=localhost"
-openssl req -config openssl.ecc.cnf -key private/localhost.ecc.key.pem -new -sha256 -out csr/localhost.ecc.csr.pem -subj "/C=US/ST=test/L=test/O=test/CN=localhost"
+openssl req -config openssl.rsa.cnf -key private/$HOSTNAME.rsa.key.pem -new -sha256 -out csr/$HOSTNAME.rsa.csr.pem -subj "/CN=blackhole.rh.com" 
+openssl req -config openssl.ecc.cnf -key private/$HOSTNAME.ecc.key.pem -new -sha256 -out csr/$HOSTNAME.ecc.csr.pem -subj "/CN=blackhole.rh.com"
 
 #sign csr
-openssl ca -config openssl.rsa.cnf -extensions server_cert -batch -days 375 -notext -md sha256 -in csr/localhost.rsa.csr.pem -out certs/localhost.rsa.cert.pem -passin file:<(echo -n "$PASS") -batch
-openssl ca -config openssl.ecc.cnf -extensions server_cert -batch -days 375 -notext -md sha256 -in csr/localhost.ecc.csr.pem -out certs/localhost.ecc.cert.pem -passin file:<(echo -n "$PASS") -batch
+openssl ca -config openssl.rsa.cnf -extensions server_cert -batch -days 375 -notext -md sha256 -in csr/$HOSTNAME.rsa.csr.pem -out certs/$HOSTNAME.rsa.cert.pem -passin file:<(echo -n "$PASS") -batch
+openssl ca -config openssl.ecc.cnf -extensions server_cert -batch -days 375 -notext -md sha256 -in csr/$HOSTNAME.ecc.csr.pem -out certs/$HOSTNAME.ecc.cert.pem -passin file:<(echo -n "$PASS") -batch
 
 # check
 
@@ -68,21 +71,21 @@ openssl ca -config openssl.ecc.cnf -extensions server_cert -batch -days 375 -not
 cat certs/intermediate.rsa.cert.pem ../certs/ca.rsa.cert.pem > certs/ca-chain.rsa.cert.pem
 cat certs/intermediate.ecc.cert.pem ../certs/ca.ecc.cert.pem > certs/ca-chain.ecc.cert.pem
 
-openssl verify -CAfile certs/ca-chain.rsa.cert.pem  certs/localhost.rsa.cert.pem
+openssl verify -CAfile certs/ca-chain.rsa.cert.pem  certs/$HOSTNAME.rsa.cert.pem
 if [ $? -ne 0 ]
 then
     echo "certificates not verifiable"
     exit 1
 fi
-openssl verify -CAfile certs/ca-chain.ecc.cert.pem  certs/localhost.ecc.cert.pem
+openssl verify -CAfile certs/ca-chain.ecc.cert.pem  certs/$HOSTNAME.ecc.cert.pem
 if [ $? -ne 0 ]
 then
     echo "certificates not verifiable"
     exit 1
 fi
 
-openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private/localhost.rsa.key.pem -out private/localhost.rsa.pkcs8.key
-openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private/localhost.ecc.key.pem -out private/localhost.ecc.pkcs8.key
+openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private/$HOSTNAME.rsa.key.pem -out private/$HOSTNAME.rsa.pkcs8.key
+openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private/$HOSTNAME.ecc.key.pem -out private/$HOSTNAME.ecc.pkcs8.key
 
 
 #copy logstash config
@@ -101,10 +104,10 @@ do
 done
 
 #connect to logstash via rsa certificate
-echo | openssl s_client -CAfile /tmp/test/ca/intermediate/certs/ca-chain.rsa.cert.pem  -cert /tmp/test/ca/intermediate/certs/localhost.rsa.cert.pem -key /tmp/test/ca/intermediate/private/localhost.rsa.pkcs8.key  -servername localhost -state -tls1_2 -connect localhost:5050 2>&1 | tee /tmp/test/rsa.client.log
+echo | openssl s_client -CAfile /tmp/test/ca/intermediate/certs/ca-chain.rsa.cert.pem  -cert /tmp/test/ca/intermediate/certs/$HOSTNAME.rsa.cert.pem -key /tmp/test/ca/intermediate/private/$HOSTNAME.rsa.pkcs8.key  -servername $HOSTNAME -state -tls1_2 -connect $HOSTNAME:$RSAPORT 2>&1 | tee /tmp/test/rsa.client.log
 
 #connect to logstash via ecc certificate
-echo | openssl s_client -CAfile /tmp/test/ca/intermediate/certs/ca-chain.ecc.cert.pem  -cert /tmp/test/ca/intermediate/certs/localhost.ecc.cert.pem -key /tmp/test/ca/intermediate/private/localhost.ecc.pkcs8.key  -servername localhost -state -tls1_2 -connect localhost:5051 2>&1 | tee /tmp/test/ecc.client.log
+echo | openssl s_client -CAfile /tmp/test/ca/intermediate/certs/ca-chain.ecc.cert.pem  -cert /tmp/test/ca/intermediate/certs/$HOSTNAME.ecc.cert.pem -key /tmp/test/ca/intermediate/private/$HOSTNAME.ecc.pkcs8.key  -servername $HOSTNAME -state -tls1_2 -connect $HOSTNAME:$ECCPORT 2>&1 | tee /tmp/test/ecc.client.log
 
 #kill logstash and tcpdump
 kill $LS_PID 
