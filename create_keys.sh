@@ -36,8 +36,8 @@ openssl genrsa -aes256 -passout pass:$PASS -out intermediate/private/intermediat
 openssl ecparam -name $CURVE -genkey  | openssl ec -aes256 -passout pass:$PASS -out intermediate/private/intermediate.ecc.key.pem
 
 #copy intermediate ca configs
-wget https://raw.githubusercontent.com/aubreybox/tmp/master/intermediate/openssl.rsa.cnf -O intermediate/openssl.rsa.cnf
-wget https://raw.githubusercontent.com/aubreybox/tmp/master/intermediate/openssl.ecc.cnf -O intermediate/openssl.ecc.cnf
+wget https://raw.githubusercontent.com/cloudsriseup/tmp/master/i_openssl.rsa.cnf -O intermediate/openssl.rsa.cnf
+wget https://raw.githubusercontent.com/cloudsriseup/tmp/master/i_openssl.ecc.cnf -O intermediate/openssl.ecc.cnf
 
 #sign intermediate ca certs
 openssl req -config intermediate/openssl.rsa.cnf -new -sha256 -key intermediate/private/intermediate.rsa.key.pem -out intermediate/csr/intermediate.rsa.csr.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=test/L=test/O=test/CN=intermediate ca rsa"
