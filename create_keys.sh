@@ -93,12 +93,8 @@ wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/ls.conf
 LS_JAVA_OPTS="-Djavax.net.debug=all" /usr/share/logstash/bin/logstash --config.debug --log.level=debug -f /tmp/test/ls.conf -l /tmp/test/ &> /tmp/test/ls.out &
 LS_PID=$!
 
-#start tcpdump
-tcpdump -w /tmp/test/hs.cap -i any port 5050 or port 5051 -U &
-TD_PID=$!
-
 #wait for logstash to be ready
-until ss -nptl | grep -qE "\:505[01]"
+until ss -nptl | grep -qE "\:5004[45]"
 do 
     sleep 1
     echo "waiting for logstash to be ready"
