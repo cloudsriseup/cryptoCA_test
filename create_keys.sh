@@ -14,8 +14,8 @@ openssl genrsa -aes256 -passout pass:$PASS -out private/ca.rsa.key.pem 4096
 openssl ecparam -name $CURVE -genkey | openssl ec -aes256 -passout pass:$PASS -out private/ca.ecc.key.pem
 
 #copy root ca configs
-wget https://raw.githubusercontent.com/aubreybox/tmp/master/openssl.rsa.cnf -O openssl.rsa.cnf
-wget https://raw.githubusercontent.com/aubreybox/tmp/master/openssl.ecc.cnf -O openssl.ecc.cnf
+wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/openssl.rsa.cnf -O openssl.rsa.cnf
+wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/openssl.ecc.cnf -O openssl.ecc.cnf
 
 #sign root ca certs
 openssl req -config openssl.rsa.cnf -key private/ca.rsa.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out certs/ca.rsa.cert.pem -passin file:<(echo -n "$PASS") -subj "/C=US/ST=test/L=test/O=test/CN=root ca rsa"
