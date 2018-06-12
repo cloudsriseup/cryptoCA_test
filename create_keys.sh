@@ -4,8 +4,8 @@ CURVE=prime256v1
 PASS=test
 
 ## root ca
-mkdir -p ~/test/ca/{certs,crl,newcerts,private}
-cd ~/test/ca
+mkdir -p /tmp/test/ca/{certs,crl,newcerts,private}
+cd /tmp/test/ca
 touch index.{rsa,ecc}.txt
 echo 1000 > serial
 
@@ -24,12 +24,12 @@ openssl req -config openssl.ecc.cnf -key private/ca.ecc.key.pem -new -x509 -days
 
 ## intermediate ca
 
-mkdir -p ~/test/ca/intermediate/{certs,crl,csr,newcerts,private}
-cd ~/test/ca/intermediate
+mkdir -p /tmp/test/ca/intermediate/{certs,crl,csr,newcerts,private}
+cd /tmp/test/ca/intermediate
 touch index.{rsa,ecc}.txt
 echo 1000 > serial
 echo 1000 > crlnumber
-cd ~/test/ca/
+cd /tmp/test/ca/
 
 #create intermediate ca keys
 openssl genrsa -aes256 -passout pass:$PASS -out intermediate/private/intermediate.rsa.key.pem 4096
@@ -50,7 +50,7 @@ openssl ca -config openssl.ecc.cnf -extensions v3_intermediate_ca -days 3650 -no
 # server cert
 
 # create server key
-cd ~/test/ca/intermediate/
+cd /tmp/test/ca/intermediate/
 openssl genrsa -out private/localhost.rsa.key.pem 2048
 openssl ecparam -name $CURVE -genkey -out private/localhost.ecc.key.pem 
 
