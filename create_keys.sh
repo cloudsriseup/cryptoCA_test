@@ -84,3 +84,32 @@ fi
 openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private/localhost.rsa.key.pem -out private/localhost.rsa.pkcs8.key
 openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private/localhost.ecc.key.pem -out private/localhost.ecc.pkcs8.key
 
+
+#copy logstash config
+cd /tmp/test
+wget https://raw.githubusercontent.com/cloudsriseup/cryptoCA_test/master/ls.conf -O ls.conf
+
+#start logstash
+LS_JAVA_OPTS="-Djavax.net.debug=all" /usr/share/logstash/bin/logstash --config.debug --log.level=debug -f /tmp/test/ls.conf -l /tmp/test/ &> /tmp/test/ls.out &
+LS_PID=$!
+
+#start tcpdump
+tcpdump -w /tmp/test/hs.cap -i any port 5050 or port 5051 -U &
+TD_PID=$!
+
+#wait for logstash to be ready
+until ss -nptl | grep -qE "\:505[01]"
+do 
+    sleep 1
+    echo "waiting for logstash to be ready"
+done
+
+#connect to logstash via rsa certificate
+echo | openssl s_client -CAfile /tmp/test/ca/intermediate/certs/ca-chain.rsa.cert.pem  -cert /tmp/test/ca/intermediate/certs/localhost.rsa.cert.pem -key /tmp/test/ca/intermediate/private/localhost.rsa.pkcs8.key  -servername localhost -state -tls1_2 -connect localhost:5050 2>&1 | tee /tmp/test/rsa.client.log
+
+#connect to logstash via ecc certificate
+echo | openssl s_client -CAfile /tmp/test/ca/intermediate/certs/ca-chain.ecc.cert.pem  -cert /tmp/test/ca/intermediate/certs/localhost.ecc.cert.pem -key /tmp/test/ca/intermediate/private/localhost.ecc.pkcs8.key  -servername localhost -state -tls1_2 -connect localhost:5051 2>&1 | tee /tmp/test/ecc.client.log
+
+#kill logstash and tcpdump
+kill $LS_PID 
+kill -2 $TD_PID
